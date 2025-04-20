@@ -31,11 +31,12 @@ Edit the config file to add your MCP servers.
 ## Usage
 
 ```bash
-mcpm --mcp-server <serverKey> [--config <configFilePath>]
+mcpm --mcp-server <serverKey> [--config <configFilePath>] [--enable-logging]
 ```
 
 - `<serverKey>`: Key of the MCP server defined in your config.
 - `<configFilePath>`: Path to a custom config file (optional).
+- `--enable-logging`: Enable logging of messages and errors to `mcpm.log`.
 
 ## Configuration
 
@@ -50,6 +51,7 @@ Configuration file (`mcpm.config.json`) structure:
       "env": {
         "ENV_VAR": "value"
       },
+      "logging": false,
       "tools": {
         "allow": "tool1 tool2",
         "deny": "tool3"
@@ -61,9 +63,11 @@ Configuration file (`mcpm.config.json`) structure:
 
 - `allow`: Space-separated list of tools to include (optional).
 - `deny`: Space-separated list of tools to exclude (optional).
+- `logging` (optional): Boolean. If `true`, enables logging to file for this server.
 
 ## Logging
 
+Logging is disabled by default. To enable file logging, pass the `--enable-logging` flag or set `"logging": true` in your server config.
 Logs are written to `mcpm.log` in the project root directory.
 
 ## Development

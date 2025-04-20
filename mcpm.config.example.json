@@ -11,6 +11,7 @@
                 "--jira-username=your_jira_username_here",
                 "--jira-token=your_jira_token_here"
             ],
+            "logging": false,
             "tools": {
                 "allow": "confluence_search confluence_get_page",
                 "deny": ""

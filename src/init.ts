@@ -1,7 +1,7 @@
 import { getArgValue } from "./args.js";
 import { loadConfig } from "./config.js";
 import { parseJsonRpcMessages, sendJsonRpcMessage } from "./jsonRpcUtils.js";
-import { log } from "./logger.js";
+import { enableLogging, log } from "./logger.js";
 import { startMcpServer } from "./serverUtils.js";
 import { filterTools } from "./tools.js";
 
@@ -14,6 +14,11 @@ export function init() {
         const mcpConfig = config.mcpmServers[mcpKey];
         if (!mcpConfig) {
             throw new Error(`MCP server '${mcpKey}' not found in config.`);
+        }
+        // Enable logging if CLI flag or server config enables it
+        const enableLoggingFlag = process.argv.includes("--enable-logging");
+        if (enableLoggingFlag || mcpConfig.logging) {
+            enableLogging();
         }
         const toolsConfig = mcpConfig.tools;
 
@@ -28,7 +33,7 @@ export function init() {
         });
 
         parseJsonRpcMessages(child.stdout, (msg: any, raw: string) => {
-            log(`[${mcpKey}] MCP->CLIENT ...`);
+            log(`[${mcpKey}] MCP->CLIENT: ${raw}`);
             // Intercept capability discovery (tools list)
             if (msg.result && msg.result.tools && toolsConfig) {
                 msg.result.tools = filterTools(msg.result.tools, toolsConfig);
