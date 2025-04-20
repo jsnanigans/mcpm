@@ -6,7 +6,7 @@ A simple CLI tool to manage MCP servers with ease.
 
 - Start specified MCP server as a child process.
 - Proxy JSON-RPC messages between client (stdin/stdout) and MCP server.
-- Filter discovered tools based on allow/deny settings in config.
+- Filter discovered tools based on allow settings in config.
 - Log message metadata and errors to `mcpm.log`.
 
 ## Installation
@@ -95,8 +95,7 @@ Configuration file (`mcpm.config.json`) structure:
       },
       "logging": false,
       "tools": {
-        "allow": ["tool1", "tool2"],
-        "deny": ["tool3"]
+        "allow": ["tool1", "tool2"]
       }
     }
   }
@@ -104,7 +103,6 @@ Configuration file (`mcpm.config.json`) structure:
 ```
 
 - `allow`: Array of tools to include (optional). Accepts an array of strings or a space-separated string.
-- `deny`: Array of tools to exclude (optional). Accepts an array of strings or a space-separated string.
 - `logging` (optional): Boolean. If `true`, enables logging to file for this server.
 
 ## Logging

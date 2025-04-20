@@ -20,7 +20,6 @@ export interface McpConfig {
     env?: Record<string, string>;
     tools?: {
         allow?: string[];
-        deny?: string[];
     };
     logging?: boolean;
 }
