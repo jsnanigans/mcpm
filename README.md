@@ -53,16 +53,16 @@ Configuration file (`mcpm.config.json`) structure:
       },
       "logging": false,
       "tools": {
-        "allow": "tool1 tool2",
-        "deny": "tool3"
+        "allow": ["tool1", "tool2"],
+        "deny": ["tool3"]
       }
     }
   }
 }
 ```
 
-- `allow`: Space-separated list of tools to include (optional).
-- `deny`: Space-separated list of tools to exclude (optional).
+- `allow`: Array of tools to include (optional). Accepts an array of strings or a space-separated string.
+- `deny`: Array of tools to exclude (optional). Accepts an array of strings or a space-separated string.
 - `logging` (optional): Boolean. If `true`, enables logging to file for this server.
 
 ## Logging
@@ -79,3 +79,8 @@ npm start -- --mcp-server <serverKey>
 ```
 
 Replace `<serverKey>` with a valid key.
+
+
+## Other MCP Tools
+
+- [mcptool](https://github.com/f/mcptools)

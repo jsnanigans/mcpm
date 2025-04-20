@@ -13,8 +13,8 @@
             ],
             "logging": false,
             "tools": {
-                "allow": "confluence_search confluence_get_page",
-                "deny": ""
+                "allow": ["confluence_search", "confluence_get_page"],
+                "deny": []
             }
         }
     }

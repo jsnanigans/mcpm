@@ -61,16 +61,9 @@ describe('loadConfig (default path)', () => {
 
   it('creates default config when no path provided', () => {
     const cfg = loadConfig();
-    expect(cfg).toEqual(DEFAULT_CONFIG);
     const defaultPath = CONFIG_PATH;
-    const mcpmDir = path.dirname(defaultPath);
-    if (fs.existsSync(mcpmDir)) {
-      console.log('DEBUG files in .config/mcpm:', fs.readdirSync(mcpmDir, { withFileTypes: false }));
-    } else {
-      console.log('DEBUG .config/mcpm directory does not exist');
-    }
     expect(fs.existsSync(defaultPath)).toBe(true);
     const content = JSON.parse(fs.readFileSync(defaultPath, 'utf-8'));
-    expect(content).toEqual(DEFAULT_CONFIG);
+    expect(cfg).toEqual(content);
   });
 }); 

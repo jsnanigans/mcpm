@@ -37,4 +37,20 @@ describe('filterTools', () => {
     const cfg = { allow: 'a b c', deny: 'b' };
     expect(filterTools(tools, cfg)).toEqual([{ name: 'a' }, { name: 'c' }]);
   });
+
+  // support array of strings for allow and deny
+  it('filters by allow array', () => {
+    const cfg = { allow: ['a', 'c'] };
+    expect(filterTools(tools, cfg)).toEqual([{ name: 'a' }, { name: 'c' }]);
+  });
+
+  it('filters by deny array', () => {
+    const cfg = { deny: ['b'] };
+    expect(filterTools(tools, cfg)).toEqual([{ name: 'a' }, { name: 'c' }]);
+  });
+
+  it('applies allow then deny array', () => {
+    const cfg = { allow: ['a', 'b', 'c'], deny: ['b'] };
+    expect(filterTools(tools, cfg)).toEqual([{ name: 'a' }, { name: 'c' }]);
+  });
 }); 
