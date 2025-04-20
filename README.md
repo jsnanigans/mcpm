@@ -31,12 +31,20 @@ Edit the config file to add your MCP servers.
 ## Usage
 
 ```bash
-mcpm --mcp-server <serverKey> [--config <configFilePath>] [--enable-logging]
+mcpm --server <serverKey> [--config <configFilePath>] [--enable-logging]
 ```
 
 - `<serverKey>`: Key of the MCP server defined in your config.
 - `<configFilePath>`: Path to a custom config file (optional).
 - `--enable-logging`: Enable logging of messages and errors to `mcpm.log`.
+
+### CLI Commands
+
+- `mcpm server list` — List all configured servers
+- `mcpm config` — Show the path to the config file
+- `mcpm log tail [--server=NAME]` — Tail the log file, optionally filter by server
+- `mcpm help` — Show help message
+- `mcpm --version` — Show version
 
 ## Configuration
 

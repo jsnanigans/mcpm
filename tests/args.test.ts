@@ -12,13 +12,13 @@ describe('getArgValue', () => {
   });
 
   it('returns the value when key and value are separate', () => {
-    process.argv = ['node', 'script', '--foo', 'bar'];
-    expect(getArgValue(['--foo'])).toBe('bar');
+    process.argv = ['node', 'script', '--server', 'bar'];
+    expect(getArgValue(['--server'])).toBe('bar');
   });
 
   it('returns the value when key and value are combined', () => {
-    process.argv = ['node', 'script', '--foo=baz'];
-    expect(getArgValue(['--foo'])).toBe('baz');
+    process.argv = ['node', 'script', '--server=baz'];
+    expect(getArgValue(['--server'])).toBe('baz');
   });
 
   it('returns undefined when key not present and required is false', () => {
@@ -43,5 +43,18 @@ describe('getArgValue', () => {
       process.exit = originalExit;
       console.error = originalError;
     }
+  });
+});
+
+describe('parseArgs', () => {
+  it('parses command, subcommand, and flags', () => {
+    const argv = ['server', 'list', '--foo', 'bar', '--baz=qux', '-c', 'file.json'];
+    const { command, subcommand, flags, positionals } = require('../src/args.ts').parseArgs(argv);
+    expect(command).toBe('server');
+    expect(subcommand).toBe('list');
+    expect(flags['--foo']).toBe('bar');
+    expect(flags['--baz']).toBe('qux');
+    expect(flags['-c']).toBe('file.json');
+    expect(positionals).toEqual([]);
   });
 }); 
