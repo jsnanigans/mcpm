@@ -4,7 +4,6 @@ A simple CLI tool to manage MCP servers with ease.
 
 ## Features
 
-- Load configuration from JSON file (`~/.config/mcpm/mcpm.config.json` by default, or a custom path via `--config`).
 - Start specified MCP server as a child process.
 - Proxy JSON-RPC messages between client (stdin/stdout) and MCP server.
 - Filter discovered tools based on allow/deny settings in config.
@@ -15,11 +14,19 @@ A simple CLI tool to manage MCP servers with ease.
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/<username>/mcpm.git
+git clone https://github.com/jsnanigans/mcpm.git
 cd mcpm
 npm install
 npm link
 ```
+
+Create a config file:
+
+```bash
+cp mcpm.config.example.json mcpm.config.json
+```
+
+Edit the config file to add your MCP servers.
 
 ## Usage
 

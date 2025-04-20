@@ -22,5 +22,9 @@ export function parseJsonRpcMessages(
 }
 
 export function sendJsonRpcMessage(stream: NodeJS.WritableStream, msg: any): void {
-    stream.write(JSON.stringify(msg) + "\n");
+    try {
+        stream.write(JSON.stringify(msg) + "\n");
+    } catch (e) {
+        console.error("Error sending JSON-RPC message:", e);
+    }
 } 

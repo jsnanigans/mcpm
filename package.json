@@ -8,7 +8,7 @@
   "scripts": {
     "prepare": "npm run build",
     "build": "tsc && chmod 755 build/index.js",
-    "run": "bun src/index.ts --mcp-server=mcp-atlassian --config=./mcpm.config.json",
+    "run": "bun src/index.ts --mcp-server=mcp-atlassian",
     "dev": "npx @modelcontextprotocol/inspector npm run run",
     "test": "bun test",
     "test:watch": "bun test --watch",

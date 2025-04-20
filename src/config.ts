@@ -1,16 +1,24 @@
 import fs from "fs";
-import os from "os";
 import path from "path";
+import { fileURLToPath } from "url";
+import { log } from "./logger.js";
 
-export const CONFIG_DIR = path.join(os.homedir(), ".config", "mcpm");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export const CONFIG_DIR = path.join(__dirname, '..');
 export const CONFIG_PATH = path.join(CONFIG_DIR, "mcpm.config.json");
+export const CONFIG_PATH_ABS = path.resolve(CONFIG_PATH);
+
 export const DEFAULT_CONFIG = {
     mcpmServers: {}
 };
 
+
 export function loadConfig(configPath?: string) {
-    const pathToUse = configPath || CONFIG_PATH;
+    const pathToUse = configPath || CONFIG_PATH_ABS;
     const dirToUse = configPath ? path.dirname(pathToUse) : CONFIG_DIR;
+    log(`Loading config from ${pathToUse}`);
     if (!fs.existsSync(dirToUse)) {
         fs.mkdirSync(dirToUse, { recursive: true });
     }

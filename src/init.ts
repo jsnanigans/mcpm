@@ -22,19 +22,13 @@ export function init() {
 
         // Proxy JSON-RPC between client and MCP server, filter tools
         parseJsonRpcMessages(process.stdin, (msg: any, raw: string) => {
-            const keys: string[] = [];
-            if (msg.method !== undefined) keys.push(`method=${msg.method}`);
-            if (msg.id !== undefined) keys.push(`id=${msg.id}`);
-            log(`CLIENT->MCP: ${keys.join(', ')}`);
+            log(`[${mcpKey}] CLIENT->MCP: ${raw}`);
             // Forward all client messages to MCP server
             sendJsonRpcMessage(child.stdin, msg);
         });
 
         parseJsonRpcMessages(child.stdout, (msg: any, raw: string) => {
-            const keys: string[] = [];
-            if (msg.method !== undefined) keys.push(`method=${msg.method}`);
-            if (msg.id !== undefined) keys.push(`id=${msg.id}`);
-            log(`MCP->CLIENT: ${keys.join(', ')}`);
+            log(`[${mcpKey}] MCP->CLIENT ...`);
             // Intercept capability discovery (tools list)
             if (msg.result && msg.result.tools && toolsConfig) {
                 msg.result.tools = filterTools(msg.result.tools, toolsConfig);
@@ -44,7 +38,7 @@ export function init() {
 
         child.stderr.on("data", (chunk: Buffer) => {
             const errMsg = chunk.toString().trim();
-            log(`MCP STDERR: ${errMsg}`);
+            log(`[${mcpKey}] MCP STDERR: ${errMsg}`);
             process.stderr.write(chunk);
         });
         child.on("exit", (code: number | null, signal: NodeJS.Signals | null) => {
