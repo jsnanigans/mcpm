@@ -30,6 +30,16 @@ describe('loadConfig (explicit path)', () => {
     expect(content).toEqual(DEFAULT_CONFIG);
   });
 
+  it('creates default config when directory does not exist', () => {
+    fs.rmSync(tempDir, { recursive: true, force: true }); // Remove the initially created dir
+    expect(fs.existsSync(tempDir)).toBe(false);
+    const cfg = loadConfig(configPath);
+    expect(cfg).toEqual(DEFAULT_CONFIG);
+    expect(fs.existsSync(configPath)).toBe(true);
+    const content = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    expect(content).toEqual(DEFAULT_CONFIG);
+  });
+
   it('reads existing config file', () => {
     const custom = { mcpServers: { foo: { command: 'echo', args: [] } } };
     fs.writeFileSync(configPath, JSON.stringify(custom), 'utf-8');
@@ -65,5 +75,33 @@ describe('loadConfig (default path)', () => {
     expect(fs.existsSync(defaultPath)).toBe(true);
     const content = JSON.parse(fs.readFileSync(defaultPath, 'utf-8'));
     expect(cfg).toEqual(content);
+  });
+});
+
+describe('saveConfig', () => {
+  let tempDir: string;
+  let configPath: string;
+  let saveConfig: typeof import('../src/config.ts').saveConfig;
+  let loadConfig: typeof import('../src/config.ts').loadConfig;
+
+  beforeEach(() => {
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mcpm-test-save-'));
+    configPath = path.join(tempDir, 'config.json');
+    ({ saveConfig, loadConfig } = require('../src/config.ts'));
+    // Ensure dir exists for loading
+    fs.mkdirSync(path.dirname(configPath), { recursive: true });
+    // Create a dummy initial config to load/compare against if needed
+    fs.writeFileSync(configPath, JSON.stringify({ mcpServers: {} }), 'utf-8');
+  });
+
+  afterEach(() => {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it('saves the config to the specified path', () => {
+    const newConfig = { mcpServers: { testServer: { command: 'test-cmd' } } };
+    saveConfig(newConfig, configPath);
+    const savedContent = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    expect(savedContent).toEqual(newConfig);
   });
 }); 

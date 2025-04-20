@@ -1,5 +1,5 @@
 // @ts-ignore: Allow import from bun:test
-import { describe, expect, it } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 import { PassThrough } from 'stream';
 import { parseJsonRpcMessages, sendJsonRpcMessage } from '../src/jsonRpcUtils.ts';
 
@@ -29,11 +29,27 @@ describe('parseJsonRpcMessages', () => {
 });
 
 describe('sendJsonRpcMessage', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {}); // Suppress console.error
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('writes a JSON line with newline', () => {
     const pt = new PassThrough();
     let data = '';
     pt.on('data', (chunk) => { data += chunk.toString(); });
     sendJsonRpcMessage(pt, { test: true });
     expect(data).toBe(JSON.stringify({ test: true }) + '\n');
+  });
+
+  it('logs error if JSON.stringify fails', () => {
+    const pt = new PassThrough();
+    const obj: any = { test: true };
+    obj.circular = obj; // Create circular reference
+    sendJsonRpcMessage(pt, obj);
+    expect(console.error).toHaveBeenCalled();
   });
 }); 
