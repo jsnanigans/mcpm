@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Rules
+- use `bun test` for all unit tests

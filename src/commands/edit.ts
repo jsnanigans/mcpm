@@ -12,7 +12,7 @@ export async function fetchAllToolsFromServerConfig(mcpConfig: McpConfig): Promi
         let timeout: NodeJS.Timeout | undefined = setTimeout(() => {
             child.kill();
             reject(new Error("Timeout waiting for tools/list response from MCP server"));
-        }, 10000);
+        }, 2000);
         const request = {
             jsonrpc: "2.0",
             id: 1,

@@ -3,3 +3,4 @@ node_modules
 mcpm.config.json
 mcpm.log
 build
+*.tmp
