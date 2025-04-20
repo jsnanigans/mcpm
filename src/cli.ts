@@ -5,7 +5,7 @@ import path from "path";
 import { handleEditCommand } from "./commands/edit.js";
 import { CONFIG_PATH_ABS, loadConfig } from "./config.js";
 import { parseJsonRpcMessages, sendJsonRpcMessage } from "./jsonRpcUtils.js";
-import { enableLogging, log } from "./logger.js";
+import { log } from "./logger.js";
 import { startMcpServer } from "./serverUtils.js";
 import { filterTools } from './tools.js';
 
@@ -83,17 +83,15 @@ export async function runCli() {
                 if (!mcpConfig) {
                     throw new Error(`MCP server '${opts.server}' not found in config.`);
                 }
-                if (opts.enableLogging || mcpConfig.logging) {
-                    enableLogging();
-                }
+                const loggingEnabled = opts.enableLogging || mcpConfig.logging;
                 const toolsConfig = mcpConfig.tools;
-                const child = startMcpServer(mcpConfig);
+                const child = startMcpServer(opts.server, mcpConfig);
                 parseJsonRpcMessages(process.stdin, (msg: any, raw: string) => {
-                    log(`[${opts.server}] CLIENT->MCP: ${raw}`);
+                    log(`[${opts.server}] CLIENT->MCP: ${raw}`, { enabled: loggingEnabled, domain: 'message' });
                     sendJsonRpcMessage(child.stdin!, msg);
                 });
                 parseJsonRpcMessages(child.stdout, (msg: any, raw: string) => {
-                    log(`[${opts.server}] MCP->CLIENT: ${raw}`);
+                    log(`[${opts.server}] MCP->CLIENT: ${raw}`, { enabled: loggingEnabled, domain: 'message' });
                     if (msg.result && msg.result.tools && toolsConfig) {
                         msg.result.tools = filterTools(msg.result.tools, toolsConfig);
                     }
@@ -101,20 +99,20 @@ export async function runCli() {
                 });
                 child.stderr.on("data", (chunk: Buffer) => {
                     const errMsg = chunk.toString().trim();
-                    log(`[${opts.server}] MCP STDERR: ${errMsg}`);
+                    log(`[${opts.server}] MCP STDERR: ${errMsg}`, { domain: 'error' });
                     process.stderr.write(chunk);
                 });
                 child.on("exit", (code: number | null, signal: NodeJS.Signals | null) => {
-                    log(`[${opts.server}] MCP server exited with code ${code}, signal ${signal}`);
+                    log(`[${opts.server}] MCP server exited with code ${code}, signal ${signal}`, { domain: 'connection' });
                     process.exit(code || 1);
                 });
             } catch (error) {
                 if (error instanceof Error) {
                     console.error(`Fatal error: ${error.message}`);
-                    log(`Fatal error: ${error.stack}`);
+                    log(`Fatal error: ${error.stack}`, { domain: 'error' });
                 } else {
                     console.error("Fatal error:", error);
-                    log(`Fatal error: ${JSON.stringify(error)}`);
+                    log(`Fatal error: ${JSON.stringify(error)}`, { domain: 'error' });
                 }
                 process.exit(1);
             }

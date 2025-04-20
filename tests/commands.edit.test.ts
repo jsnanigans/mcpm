@@ -57,7 +57,7 @@ describe('fetchAllToolsFromServerConfig', () => {
         parseJsonRpcMessagesSpy.mockImplementation((stream, cb) => {
             cb({ result: { tools: [{ name: 'foo' }, { name: 'bar' }] } }, '');
         });
-        const result = await editModule.fetchAllToolsFromServerConfig({ cmd: 'x', args: [], env: {} });
+        const result = await editModule.fetchAllToolsFromServerConfig('test-server', { command: 'x', args: [], env: {} } as configModule.McpConfig);
         expect(result).toEqual([{ name: 'foo' }, { name: 'bar' }]);
     });
 
@@ -75,22 +75,23 @@ describe('fetchAllToolsFromServerConfig', () => {
         };
         startMcpServerSpy.mockReturnValue(fakeChild);
         parseJsonRpcMessagesSpy.mockImplementation(() => { });
-        await expect(editModule.fetchAllToolsFromServerConfig({ cmd: 'x', args: [], env: {} })).rejects.toThrow('Timeout');
+        await expect(editModule.fetchAllToolsFromServerConfig('test-server', { command: 'x', args: [], env: {} } as configModule.McpConfig)).rejects.toThrow('Timeout');
     });
 
     it('rejects if process exits before response', async () => {
-        let exitCb: any;
+        let exitCb: (code: number) => void;
         const fakeChild: any = {
             stdout: {},
             stderr: { on: vi.fn() },
-            on: (event, cb) => { if (event === 'exit') exitCb = cb; },
+            on: (event: string, cb: any) => { if (event === 'exit') exitCb = cb; },
             kill: vi.fn(),
             stdin: { write: vi.fn() },
         };
         startMcpServerSpy.mockReturnValue(fakeChild);
         parseJsonRpcMessagesSpy.mockImplementation(() => { });
-        const promise = editModule.fetchAllToolsFromServerConfig({ cmd: 'x', args: [], env: {} });
-        exitCb(1);
+        const promise = editModule.fetchAllToolsFromServerConfig('test-server', { command: 'x', args: [], env: {} } as configModule.McpConfig);
+        expect(exitCb!).toBeDefined();
+        exitCb!(1);
         await expect(promise).rejects.toThrow('MCP server exited before responding');
     });
 });
@@ -115,7 +116,6 @@ describe('handleEditCommand', () => {
         fetchAllToolsSpy = vi.spyOn(editModule, 'fetchAllToolsFromServerConfig');
         vi.spyOn(console, 'error').mockImplementation(() => { });
         vi.spyOn(console, 'log').mockImplementation(() => { });
-        vi.spyOn(process, 'exit').mockImplementation(() => { throw new Error('exit'); });
     });
     afterEach(() => {
         vi.restoreAllMocks();
@@ -123,17 +123,17 @@ describe('handleEditCommand', () => {
 
     it('exits if no servers configured', async () => {
         loadConfigSpy.mockReturnValue({ mcpServers: {} });
-        await expect(editModule.handleEditCommand()).rejects.toThrow('exit');
+        await expect(editModule.handleEditCommand()).rejects.toThrow('No MCP servers configured.');
     });
 
     it('exits if serverKey not found', async () => {
         loadConfigSpy.mockReturnValue({ mcpServers: { foo: {} } });
-        await expect(editModule.handleEditCommand('bar')).rejects.toThrow('exit');
+        await expect(editModule.handleEditCommand('bar')).rejects.toThrow('Server key \'bar\' not found in config.');
     });
 
     it('exits if serverConfig is missing', async () => {
-        loadConfigSpy.mockReturnValue({ mcpServers: { foo: undefined } });
-        await expect(editModule.handleEditCommand('foo')).rejects.toThrow('exit');
+        loadConfigSpy.mockReturnValue({ mcpServers: { foo: undefined as any } });
+        await expect(editModule.handleEditCommand('foo')).rejects.toThrow('Server config for key \'foo\' is missing or invalid.');
     });
 
     it('runs happy path for tools section', async () => {

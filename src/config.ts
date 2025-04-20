@@ -15,7 +15,7 @@ export const DEFAULT_CONFIG = {
 };
 
 export interface McpConfig {
-    cmd: string;
+    command: string;
     args?: string[];
     env?: Record<string, string>;
     tools?: {
@@ -31,7 +31,7 @@ export interface Config {
 export function loadConfig(configPath?: string): Config {
     const pathToUse = configPath || CONFIG_PATH_ABS;
     const dirToUse = configPath ? path.dirname(pathToUse) : CONFIG_DIR;
-    log(`Loading config from ${pathToUse}`);
+    log(`Loading config from ${pathToUse}`, { domain: 'config' });
     if (!fs.existsSync(dirToUse)) {
         fs.mkdirSync(dirToUse, { recursive: true });
     }
@@ -44,6 +44,6 @@ export function loadConfig(configPath?: string): Config {
 
 export function saveConfig(config: Config, configPath?: string) {
     const pathToUse = configPath || CONFIG_PATH_ABS;
-    log(`Saving config to ${pathToUse}`);
+    log(`Saving config to ${pathToUse}`, { domain: 'config' });
     fs.writeFileSync(pathToUse, JSON.stringify(config, null, 4), "utf-8");
 } 
