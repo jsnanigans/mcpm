@@ -2,3 +2,4 @@ node_modules
 *.local
 mcpm.config.json
 mcpm.log
+build

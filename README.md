@@ -1,6 +1,6 @@
-# mcpm (MCP Proxy CLI)
+# mcpm (MCP Manager)
 
-A simple CLI tool to proxy JSON-RPC messages between a client and an MCP server, filtering tools based on user configuration.
+A simple CLI tool to manage MCP servers with ease.
 
 ## Features
 
@@ -15,8 +15,8 @@ A simple CLI tool to proxy JSON-RPC messages between a client and an MCP server,
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/<username>/mcproxy.git
-cd mcproxy
+git clone https://github.com/<username>/mcpm.git
+cd mcpm
 npm install
 npm link
 ```

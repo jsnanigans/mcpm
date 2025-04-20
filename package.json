@@ -6,6 +6,7 @@
     "mcpm": "./build/index.js"
   },
   "scripts": {
+    "prepare": "npm run build",
     "build": "tsc && chmod 755 build/index.js",
     "run": "bun src/index.ts --mcp-server=mcp-atlassian --config=./mcpm.config.json",
     "dev": "npx @modelcontextprotocol/inspector npm run run",
