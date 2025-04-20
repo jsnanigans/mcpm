@@ -14,8 +14,22 @@ export const DEFAULT_CONFIG = {
     mcpServers: {}
 };
 
+export interface McpConfig {
+    cmd: string;
+    args?: string[];
+    env?: Record<string, string>;
+    tools?: {
+        allow?: string[];
+        deny?: string[];
+    };
+    logging?: boolean;
+}
 
-export function loadConfig(configPath?: string) {
+export interface Config {
+    mcpServers: Record<string, McpConfig>;
+}
+
+export function loadConfig(configPath?: string): Config {
     const pathToUse = configPath || CONFIG_PATH_ABS;
     const dirToUse = configPath ? path.dirname(pathToUse) : CONFIG_DIR;
     log(`Loading config from ${pathToUse}`);
@@ -27,4 +41,10 @@ export function loadConfig(configPath?: string) {
         console.error(`Created default config at ${pathToUse}`);
     }
     return JSON.parse(fs.readFileSync(pathToUse, "utf-8"));
+}
+
+export function saveConfig(config: Config, configPath?: string) {
+    const pathToUse = configPath || CONFIG_PATH_ABS;
+    log(`Saving config to ${pathToUse}`);
+    fs.writeFileSync(pathToUse, JSON.stringify(config, null, 4), "utf-8");
 } 
