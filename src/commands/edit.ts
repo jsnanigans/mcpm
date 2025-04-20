@@ -5,7 +5,7 @@ import { log } from "../logger.js";
 import { startMcpServer } from "../serverUtils.js";
 
 // Fetch all tools from a server config
-export async function fetchAllToolsFromServerConfig(mcpConfig: McpConfig): Promise<{ name: string }[]> {
+export async function fetchAllToolsFromServerConfig(mcpConfig: McpConfig): Promise<{ name: string; description: string }[]> {
     log(`[fetchAllToolsFromServerConfig] Fetching all tools for cmd: ${mcpConfig.cmd}`);
     return new Promise((resolve, reject) => {
         const child = startMcpServer(mcpConfig);
@@ -74,14 +74,15 @@ export async function handleEditCommand(serverKeyArg?: string, configPath?: stri
     });
     if (section === "tools") {
         const allTools = await fetchAllToolsFromServerConfig(serverConfig);
-        const allToolNames = allTools.map(t => t.name).sort();
+        const allToolChoices = allTools.sort((a, b) => a.name.localeCompare(b.name));
         const currentAllowedTools = new Set(serverConfig.tools?.allow || []);
         const selectedTools = await checkbox({
             message: 'Select allowed tools (space to toggle, enter to confirm):',
-            choices: allToolNames.map(toolName => ({
-                name: toolName,
-                value: toolName,
-                checked: currentAllowedTools.has(toolName)
+            choices: allToolChoices.map(toolName => ({
+                name: toolName.name,
+                description: toolName.description,
+                value: toolName.name,
+                checked: currentAllowedTools.has(toolName.name)
             })),
             pageSize: 15,
         });

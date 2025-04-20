@@ -38,13 +38,47 @@ mcpm --server <serverKey> [--config <configFilePath>] [--enable-logging]
 - `<configFilePath>`: Path to a custom config file (optional).
 - `--enable-logging`: Enable logging of messages and errors to `mcpm.log`.
 
-### CLI Commands
+## CLI Command Reference
 
-- `mcpm server list` — List all configured servers
-- `mcpm config` — Show the path to the config file
-- `mcpm log tail [--server=NAME]` — Tail the log file, optionally filter by server
-- `mcpm help` — Show help message
-- `mcpm --version` — Show version
+```sh
+mcpm [options] [command]
+```
+
+**Options:**
+- `--version`                      Show version
+- `-s, --server <serverKey>`       Server key to use
+- `-c, --config <configPath>`      Path to config file
+- `--enable-logging`               Enable logging
+- `-h, --help`                     Display help for command
+
+**Commands:**
+- `server list [-c <configPath>]`  List all configured servers
+- `edit [server] [-c <configPath>]`  Interactively edit a server configuration (choose server, then section, then allowed tools)
+- `config`                         Show the path to the config file
+- `log tail [-s <name>]`           Tail the log file, optionally filter by server name
+
+---
+
+### Examples
+
+```sh
+# List all servers
+mcpm server list
+
+# Edit allowed tools for a server interactively
+mcpm edit my-server
+
+# Show config file path
+mcpm config
+
+# Tail logs for a specific server
+mcpm log tail -s my-server
+
+# Start a server with logging enabled
+mcpm --server my-server --enable-logging
+```
+
+> **Tip:** Use `mcpm edit` to interactively select a server and manage its allowed tools. Future sections for resources and prompts are planned.
 
 ## Configuration
 

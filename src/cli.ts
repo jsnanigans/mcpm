@@ -2,7 +2,6 @@ import { spawn } from "child_process";
 import { Command } from 'commander';
 import fs from "fs";
 import path from "path";
-import { cache } from './cache.js';
 import { handleEditCommand } from "./commands/edit.js";
 import { CONFIG_PATH_ABS, loadConfig } from "./config.js";
 import { parseJsonRpcMessages, sendJsonRpcMessage } from "./jsonRpcUtils.js";
@@ -96,7 +95,6 @@ export async function runCli() {
                 parseJsonRpcMessages(child.stdout, (msg: any, raw: string) => {
                     log(`[${opts.server}] MCP->CLIENT: ${raw}`);
                     if (msg.result && msg.result.tools && toolsConfig) {
-                        cache('tools', opts.server, msg.result.tools);
                         msg.result.tools = filterTools(msg.result.tools, toolsConfig);
                     }
                     sendJsonRpcMessage(process.stdout, msg);
