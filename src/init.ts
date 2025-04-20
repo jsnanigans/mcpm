@@ -11,7 +11,7 @@ export function init() {
         const configPath = getArgValue(["--config", "-c"]);
         const config = loadConfig(configPath);
         const mcpKey = getArgValue(["--mcp-server", "-m"], true);
-        const mcpConfig = config.mcpmServers[mcpKey];
+        const mcpConfig = config.mcpServers[mcpKey];
         if (!mcpConfig) {
             throw new Error(`MCP server '${mcpKey}' not found in config.`);
         }

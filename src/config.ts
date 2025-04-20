@@ -11,7 +11,7 @@ export const CONFIG_PATH = path.join(CONFIG_DIR, "mcpm.config.json");
 export const CONFIG_PATH_ABS = path.resolve(CONFIG_PATH);
 
 export const DEFAULT_CONFIG = {
-    mcpmServers: {}
+    mcpServers: {}
 };
 
 

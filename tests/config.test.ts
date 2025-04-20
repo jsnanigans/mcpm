@@ -31,7 +31,7 @@ describe('loadConfig (explicit path)', () => {
   });
 
   it('reads existing config file', () => {
-    const custom = { mcpmServers: { foo: { command: 'echo', args: [] } } };
+    const custom = { mcpServers: { foo: { command: 'echo', args: [] } } };
     fs.writeFileSync(configPath, JSON.stringify(custom), 'utf-8');
     const cfg = loadConfig(configPath);
     expect(cfg).toEqual(custom);

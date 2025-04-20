@@ -44,7 +44,7 @@ Configuration file (`mcpm.config.json`) structure:
 
 ```json
 {
-  "mcpmServers": {
+  "mcpServers": {
     "<serverKey>": {
       "command": "<path/to/mcp-server-binary>",
       "args": ["--flag", "value"],
