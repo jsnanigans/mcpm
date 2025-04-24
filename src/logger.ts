@@ -9,11 +9,24 @@ const LOG_PATH = path.join(__dirname, "../mcpm.log");
 let logStream = fs.createWriteStream(LOG_PATH, { flags: "a" });
 
 type LogDomain = 'connection' | 'message' | 'tool' | 'error' | 'config';
+type LogLevel = 'info' | 'warn' | 'error' | 'debug';
+const ENABLED_LEVELS: LogLevel[] = ['info', 'warn', 'error', 'debug'];
 const ENABLED_DOMAINS: LogDomain[] = ['connection', 'tool', 'error', 'config'];
 
-export function log(message: string, { domain, enabled }: { domain?: LogDomain, enabled?: boolean } = {}) {
+export function log(
+    message: string,
+    { domain, level = 'info', enabled, agent }: { domain?: LogDomain; level?: LogLevel; enabled?: boolean; agent?: string } = {}
+) {
     if (!ENABLED_DOMAINS.includes(domain || 'connection')) return;
+    if (!ENABLED_LEVELS.includes(level)) return;
     if (enabled === false) return;
     const timestamp = new Date().toISOString();
-    logStream.write(`[${timestamp}] ${domain ? `[${domain}]` : ''}: ${message.trim()}\n`);
+    const logEntry = {
+        timestamp,
+        level,
+        domain: domain || 'connection',
+        agent: agent || undefined,
+        message: message.trim()
+    };
+    logStream.write(JSON.stringify(logEntry) + "\n");
 }

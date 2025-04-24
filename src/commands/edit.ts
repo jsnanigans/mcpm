@@ -12,7 +12,7 @@ export async function fetchAllToolsFromServerConfig(serverKey: string, mcpConfig
         let timeout: NodeJS.Timeout | undefined = setTimeout(() => {
             child.kill();
             reject(new Error("Timeout waiting for tools/list response from MCP server"));
-        }, 5000);
+        }, 20000);
         const initRequest = { "jsonrpc": "2.0", "id": 0, "method": "initialize", "params": { "protocolVersion": "2024-11-05", "capabilities": { "sampling": {}, "roots": { "listChanged": true } }, "clientInfo": { "name": "mcp-inspector", "version": "0.10.2" } } }
         const toolListRequest = { "jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": { "_meta": { "progressToken": 1 } } };
         const initializedRequest = { "jsonrpc": "2.0", "method": "notifications/initialized" }

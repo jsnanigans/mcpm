@@ -17,6 +17,7 @@ Clone the repository and install dependencies:
 git clone https://github.com/jsnanigans/mcpm.git
 cd mcpm
 npm install
+npm run build # Compile TypeScript to JavaScript
 npm link
 ```
 
@@ -31,11 +32,12 @@ Edit the config file to add your MCP servers.
 ## Usage
 
 ```bash
-mcpm --server <serverKey> [--config <configFilePath>] [--enable-logging]
+mcpm --server <serverKey> [--config <configFilePath>] [--agent <agentName>] [--enable-logging]
 ```
 
 - `<serverKey>`: Key of the MCP server defined in your config.
 - `<configFilePath>`: Path to a custom config file (optional).
+- `--agent <agentName>`: Identifier for the agent using the MCP server (e.g., `cursor`, `claude-dk`).
 - `--enable-logging`: Enable logging of messages and errors to `mcpm.log`.
 
 ## CLI Command Reference
@@ -48,6 +50,7 @@ mcpm [options] [command]
 - `--version`                      Show version
 - `-s, --server <serverKey>`       Server key to use
 - `-c, --config <configPath>`      Path to config file
+- `--agent <agentName>`            Identifier for the agent using the MCP server
 - `--enable-logging`               Enable logging
 - `-h, --help`                     Display help for command
 
@@ -75,8 +78,56 @@ mcpm config
 mcpm log tail -s my-server
 
 # Start a server with logging enabled
-mcpm --server my-server --enable-logging
+mcpm --server my-server --agent cursor --enable-logging
 ```
+
+### Usage with Cursor
+
+You can configure Cursor to use `mcpm` to manage your MCP servers. Add the following to your Cursor `settings.json` file:
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "mcpm",
+      "args": [
+        "--server=github",
+        "--agent=cursor"
+      ]
+    },
+    "atlassian": {
+      "command": "mcpm",
+      "args": [
+        "--server=mcp-atlassian",
+        "--agent=cursor"
+      ]
+    },
+    "figma": {
+      "command": "mcpm",
+      "args": [
+        "--server=figma",
+        "--agent=cursor"
+      ]
+    },
+    "@21st-dev/magic": {
+      "command": "mcpm",
+      "args": [
+        "--server=@21st-dev/magic",
+        "--agent=cursor"
+      ]
+    },
+    "puppeteer": {
+      "command": "mcpm",
+      "args": [
+        "--server=puppeteer",
+        "--agent=cursor"
+      ]
+    }
+  }
+}
+```
+
+Make sure your `mcpm.config.json` file defines the servers referenced here (e.g., `github`, `mcp-atlassian`, `figma`, etc.).
 
 > **Tip:** Use `mcpm edit` to interactively select a server and manage its allowed tools. Future sections for resources and prompts are planned.
 

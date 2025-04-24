@@ -72,6 +72,7 @@ export async function runCli() {
     program
         .option('-s, --server <serverKey>', 'Server key to use')
         .option('-c, --config <configPath>', 'Path to config file')
+        .option('--agent <agentName>', 'Agent identifier (e.g., cursor, claude-dk)')
         .option('--enable-logging', 'Enable logging')
         .action(async (opts) => {
             if (!opts.server) {
@@ -85,13 +86,13 @@ export async function runCli() {
                 }
                 const loggingEnabled = opts.enableLogging || mcpConfig.logging;
                 const toolsConfig = mcpConfig.tools;
-                const child = startMcpServer(opts.server, mcpConfig);
+                const child = startMcpServer(opts.server, mcpConfig, opts.agent);
                 parseJsonRpcMessages(process.stdin, (msg: any, raw: string) => {
-                    log(`[${opts.server}] CLIENT->MCP: ${raw}`, { enabled: loggingEnabled, domain: 'message' });
+                    log(`[${opts.server}] CLIENT->MCP: ${raw}`, { enabled: loggingEnabled, domain: 'message', agent: opts.agent });
                     sendJsonRpcMessage(child.stdin!, msg);
                 });
                 parseJsonRpcMessages(child.stdout, (msg: any, raw: string) => {
-                    log(`[${opts.server}] MCP->CLIENT: ${raw}`, { enabled: loggingEnabled, domain: 'message' });
+                    log(`[${opts.server}] MCP->CLIENT: ${raw}`, { enabled: loggingEnabled, domain: 'message', agent: opts.agent });
                     if (msg.result && msg.result.tools && toolsConfig) {
                         msg.result.tools = filterTools(msg.result.tools, toolsConfig);
                     }
@@ -99,11 +100,11 @@ export async function runCli() {
                 });
                 child.stderr.on("data", (chunk: Buffer) => {
                     const errMsg = chunk.toString().trim();
-                    log(`[${opts.server}] MCP STDERR: ${errMsg}`, { domain: 'error' });
+                    log(`[${opts.server}] MCP STDERR: ${errMsg}`, { domain: 'error', agent: opts.agent });
                     process.stderr.write(chunk);
                 });
                 child.on("exit", (code: number | null, signal: NodeJS.Signals | null) => {
-                    log(`[${opts.server}] MCP server exited with code ${code}, signal ${signal}`, { domain: 'connection' });
+                    log(`[${opts.server}] MCP server exited with code ${code}, signal ${signal}`, { domain: 'connection', agent: opts.agent });
                     process.exit(code || 1);
                 });
             } catch (error) {
