@@ -1,9 +1,21 @@
+import { log } from "./logger.js";
+
+interface JsonRpcMessage {
+    jsonrpc?: string;
+    id?: string | number;
+    method?: string;
+    params?: any;
+    result?: any;
+    error?: any;
+}
+
 export function parseJsonRpcMessages(
     stream: NodeJS.ReadableStream,
-    onMessage: (msg: any, raw: string) => void
+    onMessage: (msg: JsonRpcMessage, raw: string) => void
 ): void {
     let buffer = "";
-    stream.on("data", (chunk: Buffer) => {
+    
+    const handleData = (chunk: Buffer) => {
         buffer += chunk.toString();
         let idx;
         while ((idx = buffer.indexOf("\n")) !== -1) {
@@ -11,20 +23,39 @@ export function parseJsonRpcMessages(
             buffer = buffer.slice(idx + 1);
             if (line.trim()) {
                 try {
-                    const msg = JSON.parse(line);
+                    const msg = JSON.parse(line) as JsonRpcMessage;
                     onMessage(msg, line);
                 } catch (e) {
-                    // Not JSON, ignore
+                    // Log parse errors for debugging but don't crash
+                    log(`JSON parse error: ${e instanceof Error ? e.message : e} for line: ${line.substring(0, 100)}...`, { 
+                        domain: 'error', 
+                        level: 'warn' 
+                    });
                 }
             }
         }
+    };
+    
+    stream.on("data", handleData);
+    stream.on("error", (err) => {
+        log(`Stream error: ${err.message}`, { domain: 'error', level: 'error' });
     });
 }
 
-export function sendJsonRpcMessage(stream: NodeJS.WritableStream, msg: any): void {
+export function sendJsonRpcMessage(stream: NodeJS.WritableStream, msg: JsonRpcMessage): void {
     try {
-        stream.write(JSON.stringify(msg) + "\n");
+        const data = JSON.stringify(msg) + "\n";
+        if (!stream.writable) {
+            throw new Error('Stream is not writable');
+        }
+        stream.write(data, (err) => {
+            if (err) {
+                log(`Error writing to stream: ${err.message}`, { domain: 'error', level: 'error' });
+            }
+        });
     } catch (e) {
-        console.error("Error sending JSON-RPC message:", e);
+        const error = e instanceof Error ? e : new Error(String(e));
+        log(`Error sending JSON-RPC message: ${error.message}`, { domain: 'error', level: 'error' });
+        console.error("Error sending JSON-RPC message:", error);
     }
 } 

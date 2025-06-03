@@ -1,7 +1,8 @@
-import { spawn } from "child_process";
+import { spawn, ChildProcess } from "child_process";
 import { Command } from 'commander';
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { handleEditCommand } from "./commands/edit.js";
 import { CONFIG_PATH_ABS, loadConfig } from "./config.js";
 import { parseJsonRpcMessages, sendJsonRpcMessage } from "./jsonRpcUtils.js";
@@ -9,12 +10,18 @@ import { log } from "./logger.js";
 import { startMcpServer } from "./serverUtils.js";
 import { filterTools } from './tools.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const env = process.env;
+
+const enable_logging = env.MCPM_ENABLE_LOGGING === 'true' || env.MCPM_ENABLE_LOGGING === '1';
+
 export async function runCli() {
     const program = new Command();
     program
         .name('mcpm')
         .description('MCP Manager CLI')
-        .version('0.0.0', '--version', 'Show version');
+        .version(getVersion(), '--version', 'Show version');
 
     program
         .command('server list')
@@ -59,13 +66,37 @@ export async function runCli() {
             }
             const tailArgs = ["-f", logPath];
             const tail = spawn("tail", tailArgs, { stdio: ["ignore", "pipe", "inherit"] });
+            let grep: ChildProcess | null = null;
+            
+            const cleanup = () => {
+                if (grep && !grep.killed) grep.kill();
+                if (!tail.killed) tail.kill();
+            };
+            
+            process.on('SIGINT', cleanup);
+            process.on('SIGTERM', cleanup);
+            
+            tail.on('error', (err) => {
+                console.error('Error running tail:', err.message);
+                cleanup();
+                process.exit(1);
+            });
+            
             if (opts.server) {
-                const grep = spawn("grep", [opts.server], { stdio: ["pipe", "inherit", "inherit"] });
-                tail.stdout.pipe(grep.stdin);
+                grep = spawn("grep", [opts.server], { stdio: ["pipe", "inherit", "inherit"] });
+                grep.on('error', (err) => {
+                    console.error('Error running grep:', err.message);
+                    cleanup();
+                    process.exit(1);
+                });
+                tail.stdout!.pipe(grep.stdin!);
             } else {
-                tail.stdout.pipe(process.stdout);
+                tail.stdout!.pipe(process.stdout);
             }
-            tail.on("close", (code) => process.exit(code || 0));
+            tail.on("close", (code) => {
+                cleanup();
+                process.exit(code || 0);
+            });
         });
 
     // Default/main usage: mcpm --server <server-key> [--config <config-file-path>] [--enable-logging]
@@ -73,7 +104,7 @@ export async function runCli() {
         .option('-s, --server <serverKey>', 'Server key to use')
         .option('-c, --config <configPath>', 'Path to config file')
         .option('--agent <agentName>', 'Agent identifier (e.g., cursor, claude-dk)')
-        .option('--enable-logging', 'Enable logging')
+        .option('--enable-logging', 'Enable logging for this session', enable_logging)
         .action(async (opts) => {
             if (!opts.server) {
                 program.help({ error: true });
@@ -87,16 +118,31 @@ export async function runCli() {
                 const loggingEnabled = opts.enableLogging || mcpConfig.logging;
                 const toolsConfig = mcpConfig.tools;
                 const child = startMcpServer(opts.server, mcpConfig, opts.agent);
+                if (!child.stdin) {
+                    throw new Error('Failed to get stdin handle for MCP server');
+                }
+                if (!child.stdout) {
+                    throw new Error('Failed to get stdout handle for MCP server');
+                }
+                
                 parseJsonRpcMessages(process.stdin, (msg: any, raw: string) => {
                     log(`[${opts.server}] CLIENT->MCP: ${raw}`, { enabled: loggingEnabled, domain: 'message', agent: opts.agent });
-                    sendJsonRpcMessage(child.stdin!, msg);
+                    try {
+                        sendJsonRpcMessage(child.stdin!, msg);
+                    } catch (error) {
+                        log(`[${opts.server}] Error sending to MCP: ${error}`, { domain: 'error', agent: opts.agent });
+                    }
                 });
                 parseJsonRpcMessages(child.stdout, (msg: any, raw: string) => {
                     log(`[${opts.server}] MCP->CLIENT: ${raw}`, { enabled: loggingEnabled, domain: 'message', agent: opts.agent });
                     if (msg.result && msg.result.tools && toolsConfig) {
                         msg.result.tools = filterTools(msg.result.tools, toolsConfig);
                     }
-                    sendJsonRpcMessage(process.stdout, msg);
+                    try {
+                        sendJsonRpcMessage(process.stdout, msg);
+                    } catch (error) {
+                        log(`[${opts.server}] Error sending to client: ${error}`, { domain: 'error', agent: opts.agent });
+                    }
                 });
                 child.stderr.on("data", (chunk: Buffer) => {
                     const errMsg = chunk.toString().trim();
@@ -119,5 +165,19 @@ export async function runCli() {
             }
         });
 
-    await program.parseAsync(process.argv);
-} 
+    try {
+        await program.parseAsync(process.argv);
+    } catch (error) {
+        console.error('Command failed:', error instanceof Error ? error.message : error);
+        process.exit(1);
+    }
+}
+
+function getVersion(): string {
+    try {
+        const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, "../../package.json"), "utf-8"));
+        return pkg.version || "0.0.0";
+    } catch {
+        return "0.0.0";
+    }
+}

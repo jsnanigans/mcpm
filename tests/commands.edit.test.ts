@@ -61,7 +61,7 @@ describe('fetchAllToolsFromServerConfig', () => {
             cb({ id: 1, result: { tools: [{ name: 'foo' }, { name: 'bar' }] } }, '');
         });
         const result = await editModule.fetchAllToolsFromServerConfig('test-server', { command: 'x', args: [], env: {} } as configModule.McpConfig);
-        expect(result).toEqual([{ name: 'foo' }, { name: 'bar' }]);
+        expect(result).toEqual([{ name: 'foo', description: '' }, { name: 'bar', description: '' }]);
         // Check that the correct sequence of messages was written to stdin
         expect(fakeChild.stdin.write).toHaveBeenCalledTimes(3);
         expect(fakeChild.stdin.write).toHaveBeenCalledWith(expect.stringContaining('"method":"initialize"'));

@@ -19,17 +19,29 @@ export async function fetchAllToolsFromServerConfig(serverKey: string, mcpConfig
 
         let resolved = false;
 
+        if (!child.stdout || !child.stdin) {
+            reject(new Error("Failed to get stdio handles for MCP server"));
+            return;
+        }
+        
         parseJsonRpcMessages(child.stdout, (msg: any, raw: string) => {
             log(`[fetchAllToolsFromServerConfig] Received message: ${JSON.stringify(msg)}`, { domain: 'message' });
             if (msg.result && msg.result.capabilities) {
-                child.stdin.write(JSON.stringify(initializedRequest) + "\n");
-                child.stdin.write(JSON.stringify(toolListRequest) + "\n");
+                try {
+                    child.stdin!.write(JSON.stringify(initializedRequest) + "\n");
+                    child.stdin!.write(JSON.stringify(toolListRequest) + "\n");
+                } catch (err) {
+                    log(`[fetchAllToolsFromServerConfig] Error writing to stdin: ${err}`, { domain: 'error' });
+                }
             }
             if (msg.result && msg.result.tools) {
                 if (timeout) clearTimeout(timeout);
                 resolved = true;
                 log(`[fetchAllToolsFromServerConfig] Found ${msg.result.tools.length} tools`, { domain: 'tool' });
-                resolve(msg.result.tools.map((t: any) => ({ name: t.name })));
+                resolve(msg.result.tools.map((t: any) => ({ 
+                    name: t.name,
+                    description: t.description || ''
+                })));
                 child.kill();
             }
         });
@@ -46,7 +58,12 @@ export async function fetchAllToolsFromServerConfig(serverKey: string, mcpConfig
             }
         });
 
-        child.stdin.write(JSON.stringify(initRequest) + "\n");
+        try {
+            child.stdin!.write(JSON.stringify(initRequest) + "\n");
+        } catch (err) {
+            log(`[fetchAllToolsFromServerConfig] Error writing initial request: ${err}`, { domain: 'error' });
+            reject(new Error(`Failed to write to MCP server: ${err}`));
+        }
     });
 }
 

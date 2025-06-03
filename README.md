@@ -1,177 +1,203 @@
-# mcpm (MCP Manager)
+# MCPM - The Model Context Protocol Manager
+*Or: How I Learned to Stop Worrying and Love the JSON-RPC*
 
-A simple CLI tool to manage MCP servers with ease.
+> "The trouble with having an open mind, of course, is that people will insist on coming along and trying to put things in it." - Terry Pratchett
 
-## Features
+In the grand tradition of the Unseen University's library system (though with considerably fewer orangutans), MCPM brings order to the chaos of MCP servers. Think of it as your very own Hex, but instead of ants and magical thinking engines, it uses TypeScript and good old-fashioned process management.
 
-- Start specified MCP server as a child process.
-- Proxy JSON-RPC messages between client (stdin/stdout) and MCP server.
-- Filter discovered tools based on allow settings in config.
-- Log message metadata and errors to `mcpm.log`.
+## What This Infernal Device Does
 
-## Installation
+MCPM acts as a highly trained Igor between your AI assistant (be it Claude, Cursor, or some other thaumaturgical entity) and the various MCP servers lurking in the depths of your system. It:
 
-Clone the repository and install dependencies:
+- **Spawns MCP servers** with all the care of a master demonologist drawing protective circles
+- **Filters tools** like the Patrician filters information - only what's necessary gets through
+- **Logs everything** to `mcpm.log`, because as any good wizard knows, you always write it down
+- **Manages configurations** with the precision of a guild-certified assassin
+
+## Installation (Or: The Summoning Ritual)
+
+First, you'll need to acquire the necessary components. No dried frog pills required, just:
 
 ```bash
 git clone https://github.com/jsnanigans/mcpm.git
 cd mcpm
-npm install
-npm run build # Compile TypeScript to JavaScript
-npm link
+npm install     # Gathering the ingredients
+npm run build   # The actual transmutation
+npm link        # Binding the spell to your system
 ```
 
-Create a config file:
+Now, create your grimoire (configuration file):
 
 ```bash
 cp mcpm.config.example.json mcpm.config.json
 ```
 
-Edit the config file to add your MCP servers.
+Edit this file with the care you'd give to inscribing protective runes. One misplaced comma and BAM! - you're debugging instead of doing useful work.
 
-## Usage
+## The Sacred Texts (Configuration)
+
+Your `mcpm.config.json` should look something like this:
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your-token-here"
+      },
+      "tools": {
+        "allow": ["create_issue", "search_issues", "create_comment"]
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/rincewind/spells"],
+      "logging": true
+    }
+  }
+}
+```
+
+Each server entry is like a page in the Octavo - handle with care:
+- `command`: The incantation to summon the server
+- `args`: Additional mystical parameters
+- `env`: Environmental conditions (like phase of the moon, but for computers)
+- `tools.allow`: Which tools the server is permitted to wield (very important - you wouldn't give a student wizard access to the really dangerous spells)
+- `logging`: Whether to record this server's utterances for posterity
+
+## Command Line Incantations
+
+### Starting a Server (The Main Event)
 
 ```bash
-mcpm --server <serverKey> [--config <configFilePath>] [--agent <agentName>] [--enable-logging]
+mcpm --server github --agent cursor --enable-logging
 ```
 
-- `<serverKey>`: Key of the MCP server defined in your config.
-- `<configFilePath>`: Path to a custom config file (optional).
-- `--agent <agentName>`: Identifier for the agent using the MCP server (e.g., `cursor`, `claude-dk`).
-- `--enable-logging`: Enable logging of messages and errors to `mcpm.log`.
+This summons the GitHub server, tells it that Cursor is the one asking, and records everything that happens (because you're prudent like that).
 
-## CLI Command Reference
+### Listing Your Arsenal
 
-```sh
-mcpm [options] [command]
-```
-
-**Options:**
-- `--version`                      Show version
-- `-s, --server <serverKey>`       Server key to use
-- `-c, --config <configPath>`      Path to config file
-- `--agent <agentName>`            Identifier for the agent using the MCP server
-- `--enable-logging`               Enable logging
-- `-h, --help`                     Display help for command
-
-**Commands:**
-- `server list [-c <configPath>]`  List all configured servers
-- `edit [server] [-c <configPath>]`  Interactively edit a server configuration (choose server, then section, then allowed tools)
-- `config`                         Show the path to the config file
-- `log tail [-s <name>]`           Tail the log file, optionally filter by server name
-
----
-
-### Examples
-
-```sh
-# List all servers
+```bash
 mcpm server list
-
-# Edit allowed tools for a server interactively
-mcpm edit my-server
-
-# Show config file path
-mcpm config
-
-# Tail logs for a specific server
-mcpm log tail -s my-server
-
-# Start a server with logging enabled
-mcpm --server my-server --agent cursor --enable-logging
 ```
 
-### Usage with Cursor
+Shows all configured servers, like reviewing your spell collection.
 
-You can configure Cursor to use `mcpm` to manage your MCP servers. Add the following to your Cursor `settings.json` file:
+### The Interactive Configuration Wizard
+
+```bash
+mcpm edit github
+```
+
+Launches an interactive tool selector. It's like having a conversation with a particularly helpful gargoyle about which tools you trust this server to use.
+
+### Finding the Configuration Scroll
+
+```bash
+mcpm config
+```
+
+Reveals the location of your configuration file, in case you've forgotten where you put it (happens to the best of us).
+
+### Watching the Crystal Ball (Logs)
+
+```bash
+mcpm log tail                    # Watch all logs
+mcpm log tail -s github         # Watch logs for a specific server
+```
+
+## Integration with Cursor (Or: Teaching Your Familiar New Tricks)
+
+Add this to your Cursor settings.json, and it'll know how to summon MCPM:
 
 ```json
 {
   "mcpServers": {
     "github": {
       "command": "mcpm",
-      "args": [
-        "--server=github",
-        "--agent=cursor"
-      ]
+      "args": ["--server=github", "--agent=cursor"]
     },
-    "atlassian": {
+    "filesystem": {
       "command": "mcpm",
-      "args": [
-        "--server=mcp-atlassian",
-        "--agent=cursor"
-      ]
-    },
-    "figma": {
-      "command": "mcpm",
-      "args": [
-        "--server=figma",
-        "--agent=cursor"
-      ]
-    },
-    "@21st-dev/magic": {
-      "command": "mcpm",
-      "args": [
-        "--server=@21st-dev/magic",
-        "--agent=cursor"
-      ]
-    },
-    "puppeteer": {
-      "command": "mcpm",
-      "args": [
-        "--server=puppeteer",
-        "--agent=cursor"
-      ]
+      "args": ["--server=filesystem", "--agent=cursor"]
     }
   }
 }
 ```
 
-Make sure your `mcpm.config.json` file defines the servers referenced here (e.g., `github`, `mcp-atlassian`, `figma`, etc.).
+## How It Actually Works (The Science Bit)
 
-> **Tip:** Use `mcpm edit` to interactively select a server and manage its allowed tools. Future sections for resources and prompts are planned.
+```
+┌─────────┐         ┌──────┐         ┌─────────────┐
+│ Cursor  │ <-----> │ MCPM │ <-----> │ MCP Server  │
+└─────────┘         └──────┘         └─────────────┘
+     ^                  |                    ^
+     |                  v                    |
+     |              Tool Filter              |
+     |                  |                    |
+     |                  v                    |
+     +------------- Logging -----------------+
+```
 
-## Configuration
+MCPM sits in the middle like a particularly clever golem, intercepting messages, filtering tools based on your configuration, and keeping detailed records of who said what to whom.
 
-Configuration file (`mcpm.config.json`) structure:
+## Advanced Wizardry
+
+### Environment Variables
+
+- `MCPM_ENABLE_LOGGING=true` - Enable logging globally (for when you really need to know what's happening)
+
+### Tool Filtering
+
+The tool filtering system works like the Assassins' Guild pricing structure - very selective:
 
 ```json
-{
-  "mcpServers": {
-    "<serverKey>": {
-      "command": "<path/to/mcp-server-binary>",
-      "args": ["--flag", "value"],
-      "env": {
-        "ENV_VAR": "value"
-      },
-      "logging": false,
-      "tools": {
-        "allow": ["tool1", "tool2"]
-      }
-    }
-  }
+"tools": {
+  "allow": ["tool1", "tool2", "tool3"]
 }
 ```
 
-- `allow`: Array of tools to include (optional). Accepts an array of strings or a space-separated string.
-- `logging` (optional): Boolean. If `true`, enables logging to file for this server.
+Or if you prefer the old ways:
 
-## Logging
-
-Logging is disabled by default. To enable file logging, pass the `--enable-logging` flag or set `"logging": true` in your server config.
-Logs are written to `mcpm.log` in the project root directory.
-
-## Development
-
-Run the proxy locally:
-
-```bash
-npm start -- --mcp-server <serverKey>
+```json
+"tools": {
+  "allow": "tool1 tool2 tool3"
+}
 ```
 
-Replace `<serverKey>` with a valid key.
+## Troubleshooting (When Things Go Pear-Shaped)
 
+### "MCP server not found in config"
+Your server key doesn't exist. Run `mcpm server list` to see what you've actually got.
 
-## Other MCP Tools
+### Server Won't Start
+1. Check if the command exists: `which <command>`
+2. Look at the logs: `mcpm log tail -s <server-name>`
+3. Try running the server command directly to see what explodes
 
-- [mcptool](https://github.com/f/mcptools)
+### Tools Not Appearing
+The tool filter might be too restrictive. Use `mcpm edit <server>` to adjust.
+
+## Philosophy (Or: Why We Built This)
+
+In the words of the great philosopher Ly Tin Wheedle, "Complexity is just simplicity waiting to be discovered." MCPM takes the complexity of managing multiple MCP servers and makes it as simple as a conversation with Death (straightforward, no nonsense, gets the job done).
+
+## Contributing (Join the Guild)
+
+Found a bug? Want to add a feature? The guild doors are open. Just remember:
+
+1. All pull requests must pass the tests (like graduating from the Assassins' Guild, but less stabby)
+2. Keep the code clean (dirty code attracts bugs, and not the kind that make good listening devices)
+3. Document your changes (future you will thank present you)
+
+## License
+
+MIT - which means you can do almost anything with it, except claim you wrote it when you didn't. That would be like claiming you invented the sandwich. Someone always did it first.
+
+---
+
+*"Real stupidity beats artificial intelligence every time." - Terry Pratchett*
+
+But with MCPM, at least your MCP servers will be managed intelligently.

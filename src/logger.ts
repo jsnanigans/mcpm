@@ -6,12 +6,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const LOG_PATH = path.join(__dirname, "../mcpm.log");
-let logStream = fs.createWriteStream(LOG_PATH, { flags: "a" });
+let logStream: fs.WriteStream | null = null;
 
 type LogDomain = 'connection' | 'message' | 'tool' | 'error' | 'config';
 type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 const ENABLED_LEVELS: LogLevel[] = ['info', 'warn', 'error', 'debug'];
 const ENABLED_DOMAINS: LogDomain[] = ['connection', 'tool', 'error', 'config'];
+
+function ensureLogStream(): fs.WriteStream {
+    if (!logStream) {
+        logStream = fs.createWriteStream(LOG_PATH, { flags: "a" });
+        logStream.on('error', (err) => {
+            console.error('Log stream error:', err);
+            logStream = null;
+        });
+    }
+    return logStream;
+}
 
 export function log(
     message: string,
@@ -28,5 +39,31 @@ export function log(
         agent: agent || undefined,
         message: message.trim()
     };
-    logStream.write(JSON.stringify(logEntry) + "\n");
+    
+    try {
+        const stream = ensureLogStream();
+        if (stream.writable) {
+            stream.write(JSON.stringify(logEntry) + "\n");
+        }
+    } catch (error) {
+        console.error('Failed to write log:', error);
+    }
 }
+
+export function closeLogStream() {
+    if (logStream) {
+        logStream.end();
+        logStream = null;
+    }
+}
+
+// Cleanup on process exit
+process.on('exit', closeLogStream);
+process.on('SIGINT', () => {
+    closeLogStream();
+    process.exit(0);
+});
+process.on('SIGTERM', () => {
+    closeLogStream();
+    process.exit(0);
+});

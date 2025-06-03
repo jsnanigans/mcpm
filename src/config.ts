@@ -39,11 +39,29 @@ export function loadConfig(configPath?: string): Config {
         fs.writeFileSync(pathToUse, JSON.stringify(DEFAULT_CONFIG, null, 4), "utf-8");
         console.error(`Created default config at ${pathToUse}`);
     }
-    return JSON.parse(fs.readFileSync(pathToUse, "utf-8"));
+    try {
+        const content = fs.readFileSync(pathToUse, "utf-8");
+        return JSON.parse(content);
+    } catch (error) {
+        if (error instanceof SyntaxError) {
+            console.error(`Invalid JSON in config file ${pathToUse}: ${error.message}`);
+            log(`Invalid JSON in config file: ${error.message}`, { domain: 'error', level: 'error' });
+        } else {
+            console.error(`Error reading config file ${pathToUse}: ${error}`);
+            log(`Error reading config file: ${error}`, { domain: 'error', level: 'error' });
+        }
+        throw error;
+    }
 }
 
 export function saveConfig(config: Config, configPath?: string) {
     const pathToUse = configPath || CONFIG_PATH_ABS;
     log(`Saving config to ${pathToUse}`, { domain: 'config' });
-    fs.writeFileSync(pathToUse, JSON.stringify(config, null, 4), "utf-8");
+    try {
+        fs.writeFileSync(pathToUse, JSON.stringify(config, null, 4), "utf-8");
+    } catch (error) {
+        console.error(`Error writing config file ${pathToUse}: ${error}`);
+        log(`Error writing config file: ${error}`, { domain: 'error', level: 'error' });
+        throw error;
+    }
 } 
